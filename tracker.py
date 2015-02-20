@@ -56,6 +56,11 @@ while(1):
     # Threshold the HSV image to get only blue colors
     mask = cv2.inRange(hsv, lower_color, upper_color)
 
+    mm = cv2.moments(mask)
+    if mm['m00'] != 0:
+        cx = int(mm['m10']/mm['m00'])
+        cy = int(mm['m01']/mm['m00'])
+        print (cx, cy)
     # Bitwise-AND mask and original image
     res = cv2.bitwise_and(frame,frame, mask= mask)
 
