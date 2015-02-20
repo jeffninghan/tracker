@@ -39,6 +39,8 @@ HUE_SCALE_FROM_PAINT_TO_PYTHON = 0.75
 #     # cv2.imshow('mask',mask)
 #     # cv2.imshow('res',res)
     # k = cv2.waitKey(5) & 0xFF
+_, line_frame = cap.read()
+start_time = time.time()
 while(1):
 
     # Convert BGR to HSV
@@ -58,9 +60,15 @@ while(1):
 
     mm = cv2.moments(mask)
     if mm['m00'] != 0:
+	cx =  int(mm['m10']/mm['m00'])
+	cy =  int(mm['m01']/mm['m00'])
+	lastx = cx
+	lasty = cy
         cx = int(mm['m10']/mm['m00'])
         cy = int(mm['m01']/mm['m00'])
-        print (cx, cy)
+	print (cx, cy)
+    	if lastx > 0 and lasty > 0 and cx > 0 and cy > 0:
+	    cv2.line(line_frame,(lastx,lasty),(cx,cy),(0,255,255),3)
     # Bitwise-AND mask and original image
     res = cv2.bitwise_and(frame,frame, mask= mask)
 
@@ -70,9 +78,11 @@ while(1):
     k = cv2.waitKey(5) & 0xFF
     if k == 27:
         break
+    if int(time.time()-start_time) > 5:
+        cv2.imshow('line', line_frame)
+        cv2.imwrite('line_frames.png', line_frame)
 
-
-cv2.destroyAllWindows()
+#cv2.destroyAllWindows()
 
 #for i in xrange(0, 10):
 # while True:
