@@ -41,6 +41,12 @@ HUE_SCALE_FROM_PAINT_TO_PYTHON = 0.75
     # k = cv2.waitKey(5) & 0xFF
 _, line_frame = cap.read()
 start_time = time.time()
+
+cx = 0
+cy = 0
+lastx = 0
+lasty = 0
+start_plot = 0
 while(1):
 
     # Convert BGR to HSV
@@ -57,18 +63,18 @@ while(1):
 
     # Threshold the HSV image to get only blue colors
     mask = cv2.inRange(hsv, lower_color, upper_color)
-
+    
     mm = cv2.moments(mask)
     if mm['m00'] != 0:
-	cx =  int(mm['m10']/mm['m00'])
-	cy =  int(mm['m01']/mm['m00'])
-	lastx = cx
-	lasty = cy
         cx = int(mm['m10']/mm['m00'])
         cy = int(mm['m01']/mm['m00'])
 	print (cx, cy)
-    	if lastx > 0 and lasty > 0 and cx > 0 and cy > 0:
+    	if lastx > 0 and lasty > 0 and cx > 0 and cy > 0 and start_plot:
 	    cv2.line(line_frame,(lastx,lasty),(cx,cy),(0,255,255),3)
+    	lastx = cx
+	lasty = cy
+	start_plot = 1
+        
     # Bitwise-AND mask and original image
     res = cv2.bitwise_and(frame,frame, mask= mask)
 
