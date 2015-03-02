@@ -23,7 +23,7 @@ while(1):
     # define range of blue color in HSV
     LOWER_BLUE = [110,50,50]
     UPPER_BLUE = [130,255,255]
-    LOWER_GREEN = [50, 50, 50]
+    LOWER_GREEN = [50, 50, 50] # LOWER_GREEN = [50, 50, 50]
     UPPER_GREEN = [110, 255, 255]
     lower_color = np.array(LOWER_GREEN, dtype=np.uint8)
     upper_color = np.array(UPPER_GREEN, dtype=np.uint8)
@@ -35,12 +35,12 @@ while(1):
     if mm['m00'] != 0:
         cx = int(mm['m10']/mm['m00'])
         cy = int(mm['m01']/mm['m00'])
-	    print (cx, cy)
+        print (cx, cy)
     	if lastx > 0 and lasty > 0 and cx > 0 and cy > 0 and start_plot:
 	        cv2.line(line_frame,(lastx,lasty),(cx,cy),(0,255,255),3)
     	lastx = cx
-	    lasty = cy
-	    start_plot = 1
+        lasty = cy
+        start_plot = 1
         
     # Bitwise-AND mask and original image
     res = cv2.bitwise_and(frame,frame, mask= mask)
