@@ -15,6 +15,29 @@ lastx = 0
 lasty = 0
 start_plot = 0
 
+# parameters for denoising
+
+def denoise(mask, bitmask_array, start_plot):
+    # parameters
+    num_frames = 15
+    denoising_threshold = 255
+
+    # initialize array
+    if start_plot == 0:
+        bitmask_array = np.empty([num_frames,len(mask),len(mask[0])]) # initialize bitmask_array
+
+    # shift frames/elements in bitmask_array
+    bitmask_array[0:num_frames-1] = bitmask_array[1:num_frames]
+    bitmask_array[num_frames-1] = mask # last element is most recent
+    
+    # calculate avg bitmask value in past num_frames frames
+    bitmask_avg = bitmask_array.sum(axis= 0)
+    bitmask_avg = bitmask_avg.__div__(num_frames)
+    mask = bitmask_avg.__ge__(denoising_threshold)*255
+    mask = np.uint8(bitmask_avg)
+    return (bitmask_array, mask)
+
+bitmask_array = None
 while(1):
     # Convert BGR to HSV
     _, frame = cap.read()
@@ -24,7 +47,7 @@ while(1):
     LOWER_BLUE = [110,50,50]
     UPPER_BLUE = [130,255,255]
     LOWER_GREEN = [50, 50, 50] # LOWER_GREEN = [50, 50, 50]
-    UPPER_GREEN = [110, 255, 255]
+    UPPER_GREEN = [110, 255, 255] # UPPER_GREEN = [110, 255, 255]
     lower_color = np.array(LOWER_GREEN, dtype=np.uint8)
     upper_color = np.array(UPPER_GREEN, dtype=np.uint8)
 
@@ -40,8 +63,9 @@ while(1):
 	        cv2.line(line_frame,(lastx,lasty),(cx,cy),(0,255,255),3)
     	lastx = cx
         lasty = cy
-        start_plot = 1
-        
+
+    # bitmask_array, mask = denoise(mask, bitmask_array, start_plot)
+
     # Bitwise-AND mask and original image
     res = cv2.bitwise_and(frame,frame, mask= mask)
 
@@ -54,4 +78,6 @@ while(1):
     if int(time.time()-start_time) > 5:
         cv2.imshow('line', line_frame)
         # cv2.imwrite('line_frames.png', line_frame)
+
+    start_plot = 1
 
