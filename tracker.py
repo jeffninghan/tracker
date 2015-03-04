@@ -53,7 +53,7 @@ def get_moment_center(mm):
 
 def denoise(mask, bitmask_array, start_plot):
     # parameters
-    num_frames = 5
+    num_frames = 15
     denoising_threshold = 255
 
     # initialize array
@@ -68,8 +68,7 @@ def denoise(mask, bitmask_array, start_plot):
     bitmask_avg = bitmask_array.sum(axis= 0)
     bitmask_avg = bitmask_avg.__div__(num_frames)
     mask = bitmask_avg.__ge__(denoising_threshold)*255
-    mask = np.uint8(mask)
-
+    mask = np.uint8(bitmask_avg)
     return (bitmask_array, mask)
 
 def calibrate():
@@ -83,35 +82,6 @@ def calibrate():
     upper_color = np.array(UPPER_GREEN, dtype=np.uint8)
 
     # Threshold the HSV image to get only blue colors
-    mask = cv2.inRange(hsv, lower_color, upper_color)
-
-    bitmask_array, mask = denoise(mask, bitmask_array, start_plot)
-    
-    mm = cv2.moments(mask)
-    if mm['m00'] != 0:
-        cx = int(mm['m10']/mm['m00'])
-        cy = int(mm['m01']/mm['m00'])
-        # print (cx, cy)
-    	if lastx > 0 and lasty > 0 and cx > 0 and cy > 0 and start_plot:
-	        cv2.line(line_frame,(lastx,lasty),(cx,cy),(0,255,255),3)
-    	lastx = cx
-        lasty = cy
-
-    # Bitwise-AND mask and original image
-    res = cv2.bitwise_and(frame,frame, mask= mask)
-
-    cv2.imshow('frame',frame)
-    cv2.imshow('mask',mask)
-    cv2.imshow('res',res)
-    k = cv2.waitKey(5) & 0xFF
-    if k == 27:
-        break
-    if int(time.time()-start_time) > 5:
-        cv2.imshow('line', line_frame)
-        # cv2.imwrite('line_frames.png', line_frame)
-
-    start_plot = 1
-
     start_time = time.time()
     while True:
         _, frame = cap.read()
