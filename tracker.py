@@ -83,7 +83,6 @@ def calibrate():
     upper_color = np.array(UPPER_GREEN, dtype=np.uint8)
 
     # Threshold the HSV image to get only blue colors
-<<<<<<< HEAD
     mask = cv2.inRange(hsv, lower_color, upper_color)
 
     bitmask_array, mask = denoise(mask, bitmask_array, start_plot)
@@ -113,7 +112,6 @@ def calibrate():
 
     start_plot = 1
 
-=======
     start_time = time.time()
     while True:
         _, frame = cap.read()
@@ -217,4 +215,3 @@ if __name__ == '__main__':
         # be able to start and stop reading points
         # save command files and remove once command is written
         # give command files to tesseract and get output 
->>>>>>> origin/master
