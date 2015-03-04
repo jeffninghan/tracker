@@ -19,7 +19,7 @@ start_plot = 0
 
 def denoise(mask, bitmask_array, start_plot):
     # parameters
-    num_frames = 15
+    num_frames = 5
     denoising_threshold = 255
 
     # initialize array
@@ -34,7 +34,28 @@ def denoise(mask, bitmask_array, start_plot):
     bitmask_avg = bitmask_array.sum(axis= 0)
     bitmask_avg = bitmask_avg.__div__(num_frames)
     mask = bitmask_avg.__ge__(denoising_threshold)*255
-    mask = np.uint8(bitmask_avg)
+    mask = np.uint8(mask)
+
+    # if start_plot == 0:
+        # print 'bitmask_avg should have 255.5/10'
+        # print bitmask_avg[num_frames-1]
+        # print type(bitmask_avg)
+        # print 'mask:'
+        # print mask
+        # print 'bitmask_array:'
+        # print bitmask_array[num_frames-1]
+        # print 'bitmask array lengths:'
+        # print len(bitmask_array)
+        # print len(bitmask_array[0])
+        # print len(bitmask_array[0][0])
+        # print 'mask lengths:'
+        # print len(mask)
+        # print len(mask[0])
+        # print 'bitmask_avg true/false:'
+        # print bitmask_avg.__ge__(denoising_threshold)
+        # print 'bitmask_avg true/false * 255:'
+        # print bitmask_avg.__ge__(denoising_threshold)*255
+
     return (bitmask_array, mask)
 
 bitmask_array = None
@@ -53,18 +74,18 @@ while(1):
 
     # Threshold the HSV image to get only blue colors
     mask = cv2.inRange(hsv, lower_color, upper_color)
+
+    bitmask_array, mask = denoise(mask, bitmask_array, start_plot)
     
     mm = cv2.moments(mask)
     if mm['m00'] != 0:
         cx = int(mm['m10']/mm['m00'])
         cy = int(mm['m01']/mm['m00'])
-        print (cx, cy)
+        # print (cx, cy)
     	if lastx > 0 and lasty > 0 and cx > 0 and cy > 0 and start_plot:
 	        cv2.line(line_frame,(lastx,lasty),(cx,cy),(0,255,255),3)
     	lastx = cx
         lasty = cy
-
-    # bitmask_array, mask = denoise(mask, bitmask_array, start_plot)
 
     # Bitwise-AND mask and original image
     res = cv2.bitwise_and(frame,frame, mask= mask)
