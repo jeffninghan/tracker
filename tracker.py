@@ -6,17 +6,31 @@ import cv2
 import numpy as np
 import time
 
-def is_marker_present(mask, center, threshold):
-    average_mask_value = 0.0
-    for row in xrange(0, len(mask)):
-        for col in xrange(0, len(mask[0])):
-            average_mask_value += mask[row][col]
+def command_background(frame):
+    # print 'full frame'
+    # print type(frame)
+    # print 'original frame:'
+    # print type(frame[0][0][0])
+    frame = np.zeros((len(frame), len(frame[0])), dtype='u1, u1, u1')
+    # for row in xrange(0, len(frame)):
+    #     for col in xrange(0, len(frame[0])):
+    #         frame[row][col] = (255, 255, 255) # white
+    #         frame[row][col] = (0, 0, 0) # black
+    # print 'new frame full:'
+    # print type(frame)
+    # print 'new frame:'
+    # print type(frame[0][0][0])
+    return frame
+    # return np.empty([len(frame),len(frame[0])])
+
+def is_marker_present(mask, center, threshold,scalingFactor=1.02):
+    average_mask_value = np.sum(mask)
     elements = len(mask) * len(mask[0])
     if elements != 0:
         average_mask_value /= float(255 * elements)
     else:
         average_mask_value = 0
-    return (average_mask_value > threshold, average_mask_value)
+    return (average_mask_value > threshold, average_mask_value*scalingFactor)
 
 # given the command image file, give to ocr and text result.
 def recognize_command(filename):
@@ -32,7 +46,8 @@ def append_point_to_command_image(command_image, mm, lastx, lasty, start_plot):
     cx, cy = get_moment_center(mm)
     if cx is not None:
         if start_plot:
-            cv2.line(command_image, (lastx,lasty),(cx,cy),(0,255,255),3)
+            # cv2.line(command_image, (lastx,lasty),(cx,cy),(0,255,255),3)
+            cv2.line(command_image, (lastx,lasty),(cx,cy),(0,0,0),3)
             lastx = cx
             lasty = cy
         else:
@@ -51,14 +66,7 @@ def get_moment_center(mm):
 
 # parameters for denoising
 
-def denoise(mask, bitmask_array, start_plot):
-    # parameters
-    num_frames = 15
-    denoising_threshold = 255
-
-    # initialize array
-    if start_plot == 0:
-        bitmask_array = np.empty([num_frames,len(mask),len(mask[0])]) # initialize bitmask_array
+def denoise(mask, bitmask_array, num_frames=2, denoising_threshold = 255):
 
     # shift frames/elements in bitmask_array
     bitmask_array[0:num_frames-1] = bitmask_array[1:num_frames]
@@ -68,25 +76,36 @@ def denoise(mask, bitmask_array, start_plot):
     bitmask_avg = bitmask_array.sum(axis= 0)
     bitmask_avg = bitmask_avg.__div__(num_frames)
     mask = bitmask_avg.__ge__(denoising_threshold)*255
-    mask = np.uint8(bitmask_avg)
+    mask = np.uint8(mask)
+
     return (bitmask_array, mask)
 
-def calibrate():
+def calibrate(lower_color, upper_color, num_frames,denoising_threshold):
 
-    # define range of blue color in HSV
-    LOWER_BLUE = [110,50,50]
-    UPPER_BLUE = [130,255,255]
-    LOWER_GREEN = [50, 50, 50] # LOWER_GREEN = [50, 50, 50]
-    UPPER_GREEN = [110, 255, 255] # UPPER_GREEN = [110, 255, 255]
-    lower_color = np.array(LOWER_GREEN, dtype=np.uint8)
-    upper_color = np.array(UPPER_GREEN, dtype=np.uint8)
+    # # define range of blue color in HSV
+    # LOWER_BLUE = [110,50,50]
+    # UPPER_BLUE = [130,255,255]
+    # LOWER_GREEN = [50, 50, 50] # LOWER_GREEN = [50, 50, 50]
+    # UPPER_GREEN = [110, 255, 255] # UPPER_GREEN = [110, 255, 255]
+    # lower_color = np.array(LOWER_GREEN, dtype=np.uint8)
+    # upper_color = np.array(UPPER_GREEN, dtype=np.uint8)
 
     # Threshold the HSV image to get only blue colors
     start_time = time.time()
+    start_plot = 0
+
+    ####### only used for initializing bitmask array for denoise #######
+    _, frame = cap.read()
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(hsv, lower_color, upper_color)
+    bitmask_array = np.empty([num_frames,len(mask),len(mask[0])])
+    ####################################################################
+
     while True:
         _, frame = cap.read()
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, lower_color, upper_color)
+        bitmask_array, mask = denoise(mask, bitmask_array, num_frames, denoising_threshold)
         mm = cv2.moments(mask)
         cv2.imshow('frame',frame)
         if (time.time() - start_time) > 3:
@@ -96,28 +115,42 @@ def calibrate():
     cv2.destroyAllWindows()
     return threshold
 
-def run(cx, cy, lastx, lasty, start_plot, threshold):
+# def run(cx, cy, lastx, lasty, start_plot, threshold,num_frames,denoising_threshold):
+def run(lower_color, upper_color, threshold,num_frames,denoising_threshold):
     reading = False
     start_time = time.time()
     line_frame = None
-    bitmask_array = None
+
+    cx = 0
+    cy = 0
+    lastx = 0
+    lasty = 0
+    start_plot = 0
+
+    # # define range of blue color in HSV
+    # LOWER_BLUE = [110,50,50]
+    # UPPER_BLUE = [130,255,255]
+    # LOWER_GREEN = [50, 50, 50] # LOWER_GREEN = [50, 50, 50]
+    # UPPER_GREEN = [110, 255, 255]
+    # lower_color = np.array(LOWER_GREEN, dtype=np.uint8)
+    # upper_color = np.array(UPPER_GREEN, dtype=np.uint8)
+
+    ####### only used for initializing bitmask array for denoise #######
+    _, frame = cap.read()
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(hsv, lower_color, upper_color)
+    bitmask_array = np.empty([num_frames,len(mask),len(mask[0])])
+    ####################################################################
+
     while True:
         # Convert BGR to HSV
         _, frame = cap.read()
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        # define range of blue color in HSV
-        LOWER_BLUE = [110,50,50]
-        UPPER_BLUE = [130,255,255]
-        LOWER_GREEN = [50, 50, 50] # LOWER_GREEN = [50, 50, 50]
-        UPPER_GREEN = [100, 255, 255]
-        lower_color = np.array(LOWER_GREEN, dtype=np.uint8)
-        upper_color = np.array(UPPER_GREEN, dtype=np.uint8)
-
         # Threshold the HSV image to get only blue colors
         mask = cv2.inRange(hsv, lower_color, upper_color)
-        
-        bitmask_array, mask = denoise(mask, bitmask_array, start_plot)
+
+        bitmask_array, mask = denoise(mask, bitmask_array, num_frames, denoising_threshold)
         mm = cv2.moments(mask)
 
         present, value = is_marker_present(mask, mm, threshold)
@@ -125,6 +158,7 @@ def run(cx, cy, lastx, lasty, start_plot, threshold):
             print 'present but not reading with image value: ' + str(value)
             reading = True
             _, line_frame = cap.read()
+            line_frame = command_background(line_frame)
             line_frame, lastx, lasty, start_plot = append_point_to_command_image(line_frame, mm, lastx, lasty, start_plot)
             # continue reading
 
@@ -145,7 +179,7 @@ def run(cx, cy, lastx, lasty, start_plot, threshold):
             reading = False
             # dont do anything
 
-        time.sleep(0.1)
+        # time.sleep(0.1)
 
         res = cv2.bitwise_and(frame,frame, mask= mask)
 
@@ -157,26 +191,42 @@ def run(cx, cy, lastx, lasty, start_plot, threshold):
             break
 
         if line_frame is not None:
+            print type(line_frame)
+            print type(line_frame[0])
+            print type(line_frame[0][0])
+            print type(line_frame[0][0][0])
             cv2.imshow('line', line_frame)
-        if int(time.time()-start_time) > 10:
+        if int(time.time()-start_time) > 30:
             break
 
-        time.sleep(0.1)
+        # time.sleep(0.1)
 
 if __name__ == '__main__':
     cap = cv2.VideoCapture(0)
     HUE_SCALE_FROM_PAINT_TO_PYTHON = 0.75
 
-    cx = 0
-    cy = 0
-    lastx = 0
-    lasty = 0
-    start_plot = 0
+    # cx = 0
+    # cy = 0
+    # lastx = 0
+    # lasty = 0
+    # start_plot = 0
+    num_frames = 2
+    denoising_threshold = 255
+
+    # define range of blue color in HSV
+    LOWER_BLUE = [110,50,50]
+    UPPER_BLUE = [130,255,255]
+    LOWER_GREEN = [60, 50, 50] # LOWER_GREEN = [50, 50, 50]
+    UPPER_GREEN = [100, 255, 255]
+    lower_color = np.array(LOWER_GREEN, dtype=np.uint8)
+    upper_color = np.array(UPPER_GREEN, dtype=np.uint8)
 
     print 'starting calibration'
-    threshold = calibrate()   # calibration should also find optimal hsv values for marker (maybe do background without marker and then with marker)
+    threshold = calibrate(lower_color, upper_color, num_frames, denoising_threshold)   # calibration should also find optimal hsv values for marker (maybe do background without marker and then with marker)
     print 'ending calibration with threshold set to: ' + str(threshold)
-    run(cx, cy, lastx, lasty, start_plot, threshold)
+    run(lower_color, upper_color, threshold, num_frames, denoising_threshold)
+    # run(cx, cy, lastx, lasty, start_plot, threshold, num_frames, denoising_threshold)
+
 
 
     # calibration
