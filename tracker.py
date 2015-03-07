@@ -132,7 +132,7 @@ def run(cx, cy, lastx, lasty, start_plot, threshold):
         # Threshold the HSV image to get only blue colors
         mask = cv2.inRange(hsv, lower_color, upper_color)
         
-        bitmask_array, mask = denoise(mask, bitmask_array, num_frames, denoising_threshold)
+        bitmask_array, mask = denoise(mask, bitmask_array)
         mm = cv2.moments(mask)
 
         present, value = is_marker_present(mask, mm, threshold)
