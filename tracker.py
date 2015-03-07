@@ -6,22 +6,31 @@ import cv2
 import numpy as np
 import time
 
-def black_background(frame):
-    for row in xrange(0, len(frame)):
-        for col in xrange(0, len(frame[0])):
-            frame[row][col] = (255, 255, 255) # white
-            # frame[row][col] = (0, 0, 0) # black
+def command_background(frame):
+    # print 'full frame'
+    # print type(frame)
+    # print 'original frame:'
+    # print type(frame[0][0][0])
+    frame = np.zeros((len(frame), len(frame[0])), dtype='u1, u1, u1')
+    # for row in xrange(0, len(frame)):
+    #     for col in xrange(0, len(frame[0])):
+    #         frame[row][col] = (255, 255, 255) # white
+    #         frame[row][col] = (0, 0, 0) # black
+    # print 'new frame full:'
+    # print type(frame)
+    # print 'new frame:'
+    # print type(frame[0][0][0])
     return frame
     # return np.empty([len(frame),len(frame[0])])
 
-def is_marker_present(mask, center, threshold):
+def is_marker_present(mask, center, threshold,scalingFactor=1.02):
     average_mask_value = np.sum(mask)
     elements = len(mask) * len(mask[0])
     if elements != 0:
         average_mask_value /= float(255 * elements)
     else:
         average_mask_value = 0
-    return (average_mask_value > threshold, average_mask_value)
+    return (average_mask_value > threshold, average_mask_value*scalingFactor)
 
 # given the command image file, give to ocr and text result.
 def recognize_command(filename):
@@ -71,19 +80,18 @@ def denoise(mask, bitmask_array, num_frames=2, denoising_threshold = 255):
 
     return (bitmask_array, mask)
 
-def calibrate(num_frames,denoising_threshold):
+def calibrate(lower_color, upper_color, num_frames,denoising_threshold):
 
-    # define range of blue color in HSV
-    LOWER_BLUE = [110,50,50]
-    UPPER_BLUE = [130,255,255]
-    LOWER_GREEN = [50, 50, 50] # LOWER_GREEN = [50, 50, 50]
-    UPPER_GREEN = [110, 255, 255] # UPPER_GREEN = [110, 255, 255]
-    lower_color = np.array(LOWER_GREEN, dtype=np.uint8)
-    upper_color = np.array(UPPER_GREEN, dtype=np.uint8)
+    # # define range of blue color in HSV
+    # LOWER_BLUE = [110,50,50]
+    # UPPER_BLUE = [130,255,255]
+    # LOWER_GREEN = [50, 50, 50] # LOWER_GREEN = [50, 50, 50]
+    # UPPER_GREEN = [110, 255, 255] # UPPER_GREEN = [110, 255, 255]
+    # lower_color = np.array(LOWER_GREEN, dtype=np.uint8)
+    # upper_color = np.array(UPPER_GREEN, dtype=np.uint8)
 
     # Threshold the HSV image to get only blue colors
     start_time = time.time()
-    bitmask_array = None
     start_plot = 0
 
     ####### only used for initializing bitmask array for denoise #######
@@ -107,18 +115,25 @@ def calibrate(num_frames,denoising_threshold):
     cv2.destroyAllWindows()
     return threshold
 
-def run(cx, cy, lastx, lasty, start_plot, threshold,num_frames,denoising_threshold):
+# def run(cx, cy, lastx, lasty, start_plot, threshold,num_frames,denoising_threshold):
+def run(lower_color, upper_color, threshold,num_frames,denoising_threshold):
     reading = False
     start_time = time.time()
     line_frame = None
 
-    # define range of blue color in HSV
-    LOWER_BLUE = [110,50,50]
-    UPPER_BLUE = [130,255,255]
-    LOWER_GREEN = [50, 50, 50] # LOWER_GREEN = [50, 50, 50]
-    UPPER_GREEN = [100, 255, 255]
-    lower_color = np.array(LOWER_GREEN, dtype=np.uint8)
-    upper_color = np.array(UPPER_GREEN, dtype=np.uint8)
+    cx = 0
+    cy = 0
+    lastx = 0
+    lasty = 0
+    start_plot = 0
+
+    # # define range of blue color in HSV
+    # LOWER_BLUE = [110,50,50]
+    # UPPER_BLUE = [130,255,255]
+    # LOWER_GREEN = [50, 50, 50] # LOWER_GREEN = [50, 50, 50]
+    # UPPER_GREEN = [110, 255, 255]
+    # lower_color = np.array(LOWER_GREEN, dtype=np.uint8)
+    # upper_color = np.array(UPPER_GREEN, dtype=np.uint8)
 
     ####### only used for initializing bitmask array for denoise #######
     _, frame = cap.read()
@@ -143,7 +158,7 @@ def run(cx, cy, lastx, lasty, start_plot, threshold,num_frames,denoising_thresho
             print 'present but not reading with image value: ' + str(value)
             reading = True
             _, line_frame = cap.read()
-            line_frame = black_background(line_frame)
+            line_frame = command_background(line_frame)
             line_frame, lastx, lasty, start_plot = append_point_to_command_image(line_frame, mm, lastx, lasty, start_plot)
             # continue reading
 
@@ -176,6 +191,10 @@ def run(cx, cy, lastx, lasty, start_plot, threshold,num_frames,denoising_thresho
             break
 
         if line_frame is not None:
+            print type(line_frame)
+            print type(line_frame[0])
+            print type(line_frame[0][0])
+            print type(line_frame[0][0][0])
             cv2.imshow('line', line_frame)
         if int(time.time()-start_time) > 30:
             break
@@ -186,18 +205,28 @@ if __name__ == '__main__':
     cap = cv2.VideoCapture(0)
     HUE_SCALE_FROM_PAINT_TO_PYTHON = 0.75
 
-    cx = 0
-    cy = 0
-    lastx = 0
-    lasty = 0
-    start_plot = 0
-    num_frames = 1
+    # cx = 0
+    # cy = 0
+    # lastx = 0
+    # lasty = 0
+    # start_plot = 0
+    num_frames = 2
     denoising_threshold = 255
 
+    # define range of blue color in HSV
+    LOWER_BLUE = [110,50,50]
+    UPPER_BLUE = [130,255,255]
+    LOWER_GREEN = [60, 50, 50] # LOWER_GREEN = [50, 50, 50]
+    UPPER_GREEN = [100, 255, 255]
+    lower_color = np.array(LOWER_GREEN, dtype=np.uint8)
+    upper_color = np.array(UPPER_GREEN, dtype=np.uint8)
+
     print 'starting calibration'
-    threshold = calibrate(num_frames, denoising_threshold)   # calibration should also find optimal hsv values for marker (maybe do background without marker and then with marker)
+    threshold = calibrate(lower_color, upper_color, num_frames, denoising_threshold)   # calibration should also find optimal hsv values for marker (maybe do background without marker and then with marker)
     print 'ending calibration with threshold set to: ' + str(threshold)
-    run(cx, cy, lastx, lasty, start_plot, threshold, num_frames, denoising_threshold)
+    run(lower_color, upper_color, threshold, num_frames, denoising_threshold)
+    # run(cx, cy, lastx, lasty, start_plot, threshold, num_frames, denoising_threshold)
+
 
 
     # calibration
