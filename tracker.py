@@ -6,11 +6,15 @@ import cv2
 import numpy as np
 import time
 
+def black_background(frame):
+    for row in xrange(0, len(frame)):
+        for col in xrange(0, len(frame[0])):
+            frame[row][col] = (255, 255, 255)
+    return frame
+    # return np.empty([len(frame),len(frame[0])])
+
 def is_marker_present(mask, center, threshold):
-    average_mask_value = 0.0
-    for row in xrange(0, len(mask)):
-        for col in xrange(0, len(mask[0])):
-            average_mask_value += mask[row][col]
+    average_mask_value = np.sum(mask)
     elements = len(mask) * len(mask[0])
     if elements != 0:
         average_mask_value /= float(255 * elements)
@@ -92,7 +96,7 @@ def calibrate():
         _, frame = cap.read()
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, lower_color, upper_color)
-        bitmask_array, mask = denoise(mask, bitmask_array)
+        # bitmask_array, mask = denoise(mask, bitmask_array)
         mm = cv2.moments(mask)
         cv2.imshow('frame',frame)
         if (time.time() - start_time) > 3:
@@ -107,7 +111,7 @@ def run(cx, cy, lastx, lasty, start_plot, threshold):
     start_time = time.time()
     line_frame = None
     num_frames = 2 # for denoising
-    denoising_threshold = 255 # for denoising
+    # denoising_threshold = 255 # for denoising
 
     # define range of blue color in HSV
     LOWER_BLUE = [110,50,50]
@@ -131,8 +135,8 @@ def run(cx, cy, lastx, lasty, start_plot, threshold):
 
         # Threshold the HSV image to get only blue colors
         mask = cv2.inRange(hsv, lower_color, upper_color)
-        
-        bitmask_array, mask = denoise(mask, bitmask_array)
+
+        # bitmask_array, mask = denoise(mask, bitmask_array, num_frames, denoising_threshold)
         mm = cv2.moments(mask)
 
         present, value = is_marker_present(mask, mm, threshold)
@@ -140,6 +144,7 @@ def run(cx, cy, lastx, lasty, start_plot, threshold):
             print 'present but not reading with image value: ' + str(value)
             reading = True
             _, line_frame = cap.read()
+            line_frame = black_background(line_frame)
             line_frame, lastx, lasty, start_plot = append_point_to_command_image(line_frame, mm, lastx, lasty, start_plot)
             # continue reading
 
@@ -173,7 +178,7 @@ def run(cx, cy, lastx, lasty, start_plot, threshold):
 
         if line_frame is not None:
             cv2.imshow('line', line_frame)
-        if int(time.time()-start_time) > 10:
+        if int(time.time()-start_time) > 30:
             break
 
         # time.sleep(0.1)
