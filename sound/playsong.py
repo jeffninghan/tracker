@@ -20,7 +20,7 @@
 
         
 
-import pygame, sys
+import pygame, sys, pycurl, os
  
 white = (255, 255, 255)
  
@@ -31,7 +31,7 @@ screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
  
 # load sound file
-sound = pygame.mixer.music.load('song.mp3')
+#sound = pygame.mixer.music.load('song.mp3')
 #print 'the sound file is',sound.get_length(),'seconds long.'
  
 print 'press 1 - play sound'
@@ -49,20 +49,25 @@ while True:
             sys.exit()
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_1:
-                pygame.mixer.music.play()
+                os.system("curl 192.168.1.127/play")
                 pygame.mixer.music.load('song.mp3')
+                pygame.mixer.music.play()
             if event.key == pygame.K_2:
-                sound.play(-1)
+                os.system("curl 192.168.1.127/pause")
+                pygame.mixer.music.pause()
             if event.key == pygame.K_3:
-                sound.play(-1, fade_ms=3000)
+                #os.system("curl 192.168.1.127/switch")
+                pygame.mixer.music.load('song2.mp3');
+                pygame.mixer.music.play()
             if event.key == pygame.K_4:
-                sound.play(-1, 5000)
+                pygame.mixer.music.load('song3.mp3');
+                pygame.mixer.music.play()
             if event.key == pygame.K_5:
-                sound.play(3)
+                pygame.mixer.music.rewind()
             if event.key == pygame.K_9:
-                sound.fadeout(3000)
+                pygame.mixer.music.set_volume(0.3)
             if event.key == pygame.K_0:
-                sound.stop()
+                pygame.mixer.music.stop()
     screen.fill(white)
     pygame.display.update()
     clock.tick(20)
