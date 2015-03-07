@@ -71,7 +71,7 @@ def denoise(mask, bitmask_array, num_frames=2, denoising_threshold = 255):
 
     return (bitmask_array, mask)
 
-def calibrate():
+def calibrate(num_frames,denoising_threshold):
 
     # define range of blue color in HSV
     LOWER_BLUE = [110,50,50]
@@ -87,7 +87,6 @@ def calibrate():
     start_plot = 0
 
     ####### only used for initializing bitmask array for denoise #######
-    num_frames = 2
     _, frame = cap.read()
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower_color, upper_color)
@@ -98,7 +97,7 @@ def calibrate():
         _, frame = cap.read()
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, lower_color, upper_color)
-        bitmask_array, mask = denoise(mask, bitmask_array)
+        bitmask_array, mask = denoise(mask, bitmask_array, num_frames, denoising_threshold)
         mm = cv2.moments(mask)
         cv2.imshow('frame',frame)
         if (time.time() - start_time) > 3:
@@ -108,12 +107,10 @@ def calibrate():
     cv2.destroyAllWindows()
     return threshold
 
-def run(cx, cy, lastx, lasty, start_plot, threshold):
+def run(cx, cy, lastx, lasty, start_plot, threshold,num_frames,denoising_threshold):
     reading = False
     start_time = time.time()
     line_frame = None
-    num_frames = 2 # for denoising
-    # denoising_threshold = 255 # for denoising
 
     # define range of blue color in HSV
     LOWER_BLUE = [110,50,50]
@@ -138,7 +135,7 @@ def run(cx, cy, lastx, lasty, start_plot, threshold):
         # Threshold the HSV image to get only blue colors
         mask = cv2.inRange(hsv, lower_color, upper_color)
 
-        bitmask_array, mask = denoise(mask, bitmask_array, num_frames)
+        bitmask_array, mask = denoise(mask, bitmask_array, num_frames, denoising_threshold)
         mm = cv2.moments(mask)
 
         present, value = is_marker_present(mask, mm, threshold)
@@ -194,11 +191,13 @@ if __name__ == '__main__':
     lastx = 0
     lasty = 0
     start_plot = 0
+    num_frames = 1
+    denoising_threshold = 255
 
     print 'starting calibration'
-    threshold = calibrate()   # calibration should also find optimal hsv values for marker (maybe do background without marker and then with marker)
+    threshold = calibrate(num_frames, denoising_threshold)   # calibration should also find optimal hsv values for marker (maybe do background without marker and then with marker)
     print 'ending calibration with threshold set to: ' + str(threshold)
-    run(cx, cy, lastx, lasty, start_plot, threshold)
+    run(cx, cy, lastx, lasty, start_plot, threshold, num_frames, denoising_threshold)
 
 
     # calibration
