@@ -9,7 +9,8 @@ import time
 def black_background(frame):
     for row in xrange(0, len(frame)):
         for col in xrange(0, len(frame[0])):
-            frame[row][col] = (255, 255, 255)
+            frame[row][col] = (255, 255, 255) # white
+            # frame[row][col] = (0, 0, 0) # black
     return frame
     # return np.empty([len(frame),len(frame[0])])
 
@@ -36,7 +37,8 @@ def append_point_to_command_image(command_image, mm, lastx, lasty, start_plot):
     cx, cy = get_moment_center(mm)
     if cx is not None:
         if start_plot:
-            cv2.line(command_image, (lastx,lasty),(cx,cy),(0,255,255),3)
+            # cv2.line(command_image, (lastx,lasty),(cx,cy),(0,255,255),3)
+            cv2.line(command_image, (lastx,lasty),(cx,cy),(0,0,0),3)
             lastx = cx
             lasty = cy
         else:
@@ -96,7 +98,7 @@ def calibrate():
         _, frame = cap.read()
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, lower_color, upper_color)
-        # bitmask_array, mask = denoise(mask, bitmask_array)
+        bitmask_array, mask = denoise(mask, bitmask_array)
         mm = cv2.moments(mask)
         cv2.imshow('frame',frame)
         if (time.time() - start_time) > 3:
@@ -136,7 +138,7 @@ def run(cx, cy, lastx, lasty, start_plot, threshold):
         # Threshold the HSV image to get only blue colors
         mask = cv2.inRange(hsv, lower_color, upper_color)
 
-        # bitmask_array, mask = denoise(mask, bitmask_array, num_frames, denoising_threshold)
+        bitmask_array, mask = denoise(mask, bitmask_array, num_frames)
         mm = cv2.moments(mask)
 
         present, value = is_marker_present(mask, mm, threshold)
