@@ -124,7 +124,7 @@ class ExecuteCommand:
         elif text == 'M':
             self.forward()
 
-        elif text == 'V':
+        elif text == 'V' or text == '\/' or text == 'U':
             self.louder()
 
         elif text == 'O':
