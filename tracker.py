@@ -216,8 +216,8 @@ def run(lower_color, upper_color, threshold,num_frames,denoising_threshold, exec
             #print type(line_frame[0][0])
             #print type(line_frame[0][0][0])
             cv2.imshow('line', line_frame)
-        if int(time.time()-start_time) > 60:
-            break
+        # if int(time.time()-start_time) > 120:
+        #     break
 
         # time.sleep(0.1)
 

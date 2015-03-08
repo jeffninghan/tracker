@@ -73,6 +73,8 @@
 #     clock.tick(20)
 
 import os
+import re
+import urllib2
 
 def removeSpecialCharacters(s):
     return re.sub('[^A-Za-z0-9-`~!&/#%+=/\<>(){}]+', '', s).strip()
@@ -82,24 +84,52 @@ class ExecuteCommand:
         self.ip = ip
 
     def play(self):
-        os.system("curl " + self.ip +"/play")
+        print "play"
+        print self.ip
+        urllib2.urlopen('http://'+self.ip+'/play')
+        # os.system("curl " + self.ip +"/play")
 
     def pause(self):
-        os.system("curl " + self.ip +"/pause")
+        print "pause"
+        urllib2.urlopen('http://'+self.ip+"/pause")
 
     def rewind(self):
-        os.system("curl " + self.ip +"/rewind")
+        print "rewind"
+        urllib2.urlopen('http://'+self.ip+"/rewind")
 
     def forward(self):
-        os.system("curl " + self.ip +"/forward")
+        print "forward"
+        urllib2.urlopen('http://'+self.ip+"/forward")
 
     def louder(self):
-        os.system("curl " + self.ip +"/louder")
+        print "louder"
+        urllib2.urlopen('http://'+self.ip+"/louder")
 
     def quiet(self):
-        os.system("curl " + self.ip +"/quiet")
+        print "quiet"
+        urllib2.urlopen('http://'+self.ip+"/quiet")
 
     def execute(self, text):
         text = removeSpecialCharacters(text)
         print text
+
+        if text == '8' or text == '$':
+            self.play()
+        elif text == 'S':
+            self.pause()
+
+        elif text == '7':
+            self.rewind()
+
+        elif text == 'M':
+            self.forward()
+
+        elif text == 'V':
+            self.louder()
+
+        elif text == 'O':
+            self.quiet()
+
+
+
 
