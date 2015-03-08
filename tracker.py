@@ -6,6 +6,8 @@ import cv2
 import numpy as np
 import time
 from pytesser import *
+import copy
+blank_frame = None
 
 def command_background(frame):
     # print 'full frame'
@@ -13,6 +15,10 @@ def command_background(frame):
     # print 'original frame:'
     # print type(frame[0][0][0])
     # frame = np.zeros((len(frame), len(frame[0])), dtype='u1, u1, u1')
+    global blank_frame
+    if blank_frame is not None:
+        return copy.deepcopy(blank_frame)
+
     for row in xrange(0, len(frame)):
         for col in xrange(0, len(frame[0])):
             frame[row][col] = (255, 255, 255) # white
@@ -21,6 +27,7 @@ def command_background(frame):
     # print type(frame)
     # print 'new frame:'
     # print type(frame[0][0][0])
+    blank_frame = copy.deepcopy(frame)
     return frame
     # return np.empty([len(frame),len(frame[0])])
 
@@ -44,8 +51,11 @@ def execute_command(command):
     return
 
 def append_point_to_command_image(command_image, mm, lastx, lasty, start_plot):
+    width = len(command_image[0])
     cx, cy = get_moment_center(mm)
+
     if cx is not None:
+        cx = width - cx
         if start_plot:
             # cv2.line(command_image, (lastx,lasty),(cx,cy),(0,255,255),3)
             cv2.line(command_image, (lastx,lasty),(cx,cy),(0,0,0),3)
@@ -188,8 +198,6 @@ def run(lower_color, upper_color, threshold,num_frames,denoising_threshold):
             reading = False
             # dont do anything
 
-        # time.sleep(0.1)
-
         res = cv2.bitwise_and(frame,frame, mask= mask)
 
         cv2.imshow('frame',frame)
@@ -205,7 +213,7 @@ def run(lower_color, upper_color, threshold,num_frames,denoising_threshold):
             #print type(line_frame[0][0])
             #print type(line_frame[0][0][0])
             cv2.imshow('line', line_frame)
-        if int(time.time()-start_time) > 30:
+        if int(time.time()-start_time) > 60:
             break
 
         # time.sleep(0.1)
