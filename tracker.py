@@ -5,6 +5,7 @@ if __name__ == '__main__' and __package__ is None:
 import cv2
 import numpy as np
 import time
+from pytesser import *
 
 def command_background(frame):
     # print 'full frame'
@@ -23,7 +24,7 @@ def command_background(frame):
     return frame
     # return np.empty([len(frame),len(frame[0])])
 
-def is_marker_present(mask, center, threshold,scalingFactor=1.02):
+def is_marker_present(mask, center, threshold,scalingFactor=1.05):
     average_mask_value = np.sum(mask)
     elements = len(mask) * len(mask[0])
     if elements != 0:
@@ -126,7 +127,7 @@ def run(lower_color, upper_color, threshold,num_frames,denoising_threshold):
     lastx = 0
     lasty = 0
     start_plot = 0
-
+    command_count = 0
     # # define range of blue color in HSV
     # LOWER_BLUE = [110,50,50]
     # UPPER_BLUE = [130,255,255]
@@ -171,6 +172,14 @@ def run(lower_color, upper_color, threshold,num_frames,denoising_threshold):
             print 'not present and reading with image value: ' + str(value)
             start_plot = 0
             reading = False
+            EXT = '.jpg'
+            filename = 'command' + str(command_count) + EXT
+            cv2.imwrite(filename, line_frame)
+            time.sleep(1)
+            im = Image.open(filename)
+            text = image_to_string(im)
+            print text
+            command_count += 1
             # stop reading and save file
             # run tesseract and get output
         else:
@@ -191,10 +200,10 @@ def run(lower_color, upper_color, threshold,num_frames,denoising_threshold):
             break
 
         if line_frame is not None:
-            print type(line_frame)
-            print type(line_frame[0])
-            print type(line_frame[0][0])
-            print type(line_frame[0][0][0])
+            #print type(line_frame)
+            #print type(line_frame[0])
+            #print type(line_frame[0][0])
+            #print type(line_frame[0][0][0])
             cv2.imshow('line', line_frame)
         if int(time.time()-start_time) > 30:
             break
@@ -224,7 +233,6 @@ if __name__ == '__main__':
     UPPER_YELLOW = [50, 255, 255]
     lower_color = np.array(LOWER_YELLOW, dtype=np.uint8)
     upper_color = np.array(UPPER_YELLOW, dtype=np.uint8)
-
     print 'starting calibration'
     threshold = calibrate(lower_color, upper_color, num_frames, denoising_threshold)   # calibration should also find optimal hsv values for marker (maybe do background without marker and then with marker)
     print 'ending calibration with threshold set to: ' + str(threshold)
