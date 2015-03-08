@@ -9,6 +9,8 @@ from pytesser import *
 import copy
 blank_frame = None
 
+from sound.playsong import ExecuteCommand
+
 def command_background(frame):
     # print 'full frame'
     # print type(frame)
@@ -127,7 +129,7 @@ def calibrate(lower_color, upper_color, num_frames,denoising_threshold):
     return threshold
 
 # def run(cx, cy, lastx, lasty, start_plot, threshold,num_frames,denoising_threshold):
-def run(lower_color, upper_color, threshold,num_frames,denoising_threshold):
+def run(lower_color, upper_color, threshold,num_frames,denoising_threshold, execute_command_class):
     reading = False
     start_time = time.time()
     line_frame = None
@@ -189,6 +191,7 @@ def run(lower_color, upper_color, threshold,num_frames,denoising_threshold):
             im = Image.open(filename)
             text = image_to_string(im)
             print text
+            execute_command_class.execute(text)
             command_count += 1
             # stop reading and save file
             # run tesseract and get output
@@ -222,6 +225,8 @@ if __name__ == '__main__':
     cap = cv2.VideoCapture(0)
     HUE_SCALE_FROM_PAINT_TO_PYTHON = 0.75
 
+    ip = "192.168.1.127"
+
     # cx = 0
     # cy = 0
     # lastx = 0
@@ -244,7 +249,10 @@ if __name__ == '__main__':
     print 'starting calibration'
     threshold = calibrate(lower_color, upper_color, num_frames, denoising_threshold)   # calibration should also find optimal hsv values for marker (maybe do background without marker and then with marker)
     print 'ending calibration with threshold set to: ' + str(threshold)
-    run(lower_color, upper_color, threshold, num_frames, denoising_threshold)
+
+    execute_command_class = ExecuteCommand(ip)
+
+    run(lower_color, upper_color, threshold, num_frames, denoising_threshold, execute_command_class)
     # run(cx, cy, lastx, lasty, start_plot, threshold, num_frames, denoising_threshold)
 
 
