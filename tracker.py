@@ -11,10 +11,10 @@ def command_background(frame):
     # print type(frame)
     # print 'original frame:'
     # print type(frame[0][0][0])
-    frame = np.zeros((len(frame), len(frame[0])), dtype='u1, u1, u1')
-    # for row in xrange(0, len(frame)):
-    #     for col in xrange(0, len(frame[0])):
-    #         frame[row][col] = (255, 255, 255) # white
+    # frame = np.zeros((len(frame), len(frame[0])), dtype='u1, u1, u1')
+    for row in xrange(0, len(frame)):
+        for col in xrange(0, len(frame[0])):
+            frame[row][col] = (255, 255, 255) # white
     #         frame[row][col] = (0, 0, 0) # black
     # print 'new frame full:'
     # print type(frame)
@@ -218,8 +218,12 @@ if __name__ == '__main__':
     UPPER_BLUE = [130,255,255]
     LOWER_GREEN = [60, 50, 50] # LOWER_GREEN = [50, 50, 50]
     UPPER_GREEN = [100, 255, 255]
-    lower_color = np.array(LOWER_GREEN, dtype=np.uint8)
-    upper_color = np.array(UPPER_GREEN, dtype=np.uint8)
+    # LOWER_YELLOW = [30, 100, 20]
+    # UPPER_YELLOW = [50, 255, 255]
+    LOWER_YELLOW = [20, 100, 100]
+    UPPER_YELLOW = [50, 255, 255]
+    lower_color = np.array(LOWER_YELLOW, dtype=np.uint8)
+    upper_color = np.array(UPPER_YELLOW, dtype=np.uint8)
 
     print 'starting calibration'
     threshold = calibrate(lower_color, upper_color, num_frames, denoising_threshold)   # calibration should also find optimal hsv values for marker (maybe do background without marker and then with marker)
